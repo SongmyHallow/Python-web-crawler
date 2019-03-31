@@ -7,7 +7,7 @@ except:
     import pandas as pd
 
 columns = ['poster', 'name', 'score', 'time', 'ratings', 'director', 'star',
-                      'movie_length', 'movie_type', 'storyline']
+                      'movie_length', 'movie_type', 'storyline', 'trailer_embed_link']
 df = pd.read_csv('test_movie.csv', encoding = 'utf-8', header = None, names = columns)
 print(df.name)
-im.get_movie_details('The Dark Knight')
+im.get_movie_details('Fight Club')

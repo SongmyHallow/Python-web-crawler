@@ -72,7 +72,7 @@ def parse_page(html):
     for item in items:
         yield{
             'poster': get_poster(soup.select('div.poster img')[item]["src"]),
-            'name': get_name(soup.select('div.title_wrapper h1')[item].text),
+            'name': get_name(soup.select('div.title_wrapper h1')[item].text.replace('\xa0','').strip()),
             'score': soup.select('span[itemprop="ratingValue"]')[item].string,
             'time': soup.select('span#titleYear > a')[item].string,
             'ratings': get_ratings(soup.select('span[itemprop="ratingCount"]')[item].string),
@@ -81,6 +81,7 @@ def parse_page(html):
             'movie_length': get_movie_length(soup.select('div.subtext > time')[item].string),
             'movie_type': get_movie_type(soup.select('div.subtext a[href*="/search/title?genres"]')),
             'storyline': soup.select('div.article div.inline span')[item].text.strip(' '),
+            'trailer_embed_link': get_youtube_link(get_name(soup.select('div.title_wrapper h1')[item].text.replace('\xa0','').strip())),
         }
     
 
@@ -149,3 +150,31 @@ def save_data1(items):
                       'movie_length', 'movie_type', 'storyline']
         w = csv.DictWriter(f, fieldnames = fieldnames)
         w.writerow(items)
+
+# 抓取油管链接，URL带embed，专门用于嵌入网页
+def get_youtube_link(name):
+    split_name = name.split(' ')
+    search_name = split_name[0]
+    for item in split_name[1:]:
+        search_name += '+'
+        search_name += item
+    search_name = search_name + '+official+trailer'
+    search_result = 'https://www.youtube.com/results?search_query='+str(search_name)
+
+    response = requests.get(search_result)
+    bsObj = BeautifulSoup(response.content, 'html.parser')
+    soup = bsObj.find_all('a')
+    for tag in soup:
+        t1 = tag.get('href')
+        match_obj = re.match(r'(.*)watch(.*)',t1, re.M|re.I)
+        if match_obj:
+            print('Youtube embed link is found.')
+            youtube_link = 'www.youtube.com'+match_obj.group()
+            return (to_embed_link(youtube_link))
+    comment = 'link needs to be searched again'
+    print(comment)
+    return comment
+
+def to_embed_link(address):
+    embed_link = re.sub(r'watch\?v\=', 'embed/', address)
+    return embed_link
