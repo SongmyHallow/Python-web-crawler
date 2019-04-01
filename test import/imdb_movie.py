@@ -30,7 +30,7 @@ def get_movie_details(name): # get the movie details
     html = get_html(url)
     for item in parse_page(html):
         print(item)
-        # save_data1(item)
+        save_data1(item)
     return None
 
 
@@ -69,6 +69,7 @@ def get_url(name):
 def parse_page(html):
     soup = BeautifulSoup(html, 'lxml')
     items = range(1)
+    sol = {}
     for item in items:
         yield{
             'poster': get_poster(soup.select('div.poster img')[item]["src"]),
@@ -83,6 +84,7 @@ def parse_page(html):
             'storyline': soup.select('div.article div.inline span')[item].text.strip(' '),
             'trailer_embed_link': get_youtube_link(get_name(soup.select('div.title_wrapper h1')[item].text.replace('\xa0','').strip())),
         }
+    
     
 
 def get_movie_length(data):
@@ -147,7 +149,7 @@ def get_name(data):
 def save_data1(items):
     with open('imdb_movie.csv', 'a', encoding='utf_8_sig', newline='') as f:
         fieldnames = ['poster', 'name', 'score', 'time', 'ratings', 'director', 'star',
-                      'movie_length', 'movie_type', 'storyline']
+                      'movie_length', 'movie_type', 'storyline', 'trailer_embed_link']
         w = csv.DictWriter(f, fieldnames = fieldnames)
         w.writerow(items)
 
@@ -160,13 +162,13 @@ def get_youtube_link(name):
         search_name += item
     search_name = search_name + '+official+trailer'
     search_result = 'https://www.youtube.com/results?search_query='+str(search_name)
-
     response = requests.get(search_result)
+    print(response)
     bsObj = BeautifulSoup(response.content, 'html.parser')
     soup = bsObj.find_all('a')
     for tag in soup:
         t1 = tag.get('href')
-        match_obj = re.match(r'(.*)watch(.*)',t1, re.M|re.I)
+        match_obj = re.match(r'(.*)watch\?v\=(.*)',t1, re.M|re.I)
         if match_obj:
             print('Youtube embed link is found.')
             youtube_link = 'www.youtube.com'+match_obj.group()
